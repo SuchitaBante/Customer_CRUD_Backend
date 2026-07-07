@@ -1,17 +1,20 @@
-# Use Java 21 runtime
-FROM eclipse-temurin:21-jdk
+# Build stage
+FROM eclipse-temurin:21-jdk AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy the JAR file
-COPY target/*.jar app.jar
+COPY . .
 
-# Render provides the PORT environment variable
-ENV PORT=10000
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
 
-# Expose the Render port
-EXPOSE 10000
+# Runtime stage
+FROM eclipse-temurin:21-jre
 
-# Run the application
+WORKDIR /app
+
+COPY --from=builder /app/target/*.jar app.jar
+
+EXPOSE 8080
+
 ENTRYPOINT ["java","-jar","app.jar"]
